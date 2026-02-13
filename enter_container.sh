@@ -76,7 +76,11 @@ function draw_rectangle() {
 }
 
 function cleanup() {
-    tput cuu $(($# + ${!#:-0}))
+    local total=0
+    for arg in "$@"; do
+        total=$((total + arg))
+    done
+    tput cuu $total
     tput ed
 }
 
@@ -128,10 +132,10 @@ num_users=${#users[@]}
 
 # Build final command
 if [[ "$selected_user_label" == "root" ]]; then
-    final_command="${docker_command} exec -it $selected_service bash"
+    final_command="${docker_command} exec $selected_service bash"
     user_name="root"
 else
-    final_command="${docker_command} exec -it -u 1000 $selected_service bash"
+    final_command="${docker_command} exec -u 1000 $selected_service bash"
     user_name="user"
 fi
 
@@ -141,6 +145,7 @@ draw_rectangle "Logged as \e[1;36m${user_name}\e[0m in ${selected_service}"
 
 # Create temp file to save errors
 error_log=$(mktemp)
+
 # Run the Command
 eval $final_command 2> "$error_log"
 exit_status=$?
